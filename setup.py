@@ -5,7 +5,7 @@ with open("readme.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='utilities',
-    version='0.1.12',
+    version='0.0.01',
     author='Kaisar Barlybay',
     author_email='kaisar.barlybay.sse@gmail.com',
     description='Testing installation of Package',

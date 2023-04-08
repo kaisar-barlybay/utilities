@@ -82,21 +82,11 @@ class modelViewSet(viewsets.ModelViewSet, Base):
         view = kwargs[serializer_name]
         del kwargs[serializer_name]
       return view
-    serializer_class = self.get_serializer_class(
-        view=handle_view('view'),
-        row=handle_view('row'),
-        element=handle_view('element'),
-        item=handle_view('item'),
-    )
+    serializer_class = self.get_serializer_class(view=handle_view('view'))
     kwargs.setdefault('context', self.get_serializer_context())
     return serializer_class(*args, **kwargs)
 
-  def get_serializer_class(self,
-                           view: Union[str, None] = None,
-                           row: Union[str, None] = None,
-                           element: Union[str, None] = None,
-                           item: Union[str, None] = None,
-                           ):
+  def get_serializer_class(self, view: Union[str, None] = None,):
     assert self.serializer_class is not None, (
         "'%s' should either include a `serializer_class` attribute, "
         "or override the `get_serializer_class()` method."
@@ -104,12 +94,6 @@ class modelViewSet(viewsets.ModelViewSet, Base):
     )
     if view is not None:
       return self.serializers[view]
-    if row is not None:
-      return self.serializers[row]
-    if element is not None:
-      return self.serializers[element]
-    if item is not None:
-      return self.serializers[item]
 
     return self.serializer_class
 
@@ -132,9 +116,6 @@ class modelViewSet(viewsets.ModelViewSet, Base):
     serializer_response = self.get_serializer(
         instance,
         view=request.GET.get('view', None),
-        row=request.GET.get('row', None),
-        element=request.GET.get('element', None),
-        item=request.GET.get('item', None),
         context={'request': request},
     )
 
@@ -161,9 +142,6 @@ class modelViewSet(viewsets.ModelViewSet, Base):
     serializer_response = self.get_serializer(
         instance,
         view=request.GET.get('view', None),
-        row=request.GET.get('row', None),
-        element=request.GET.get('element', None),
-        item=request.GET.get('item', None),
         context={'request': request},
     )
     headers = self.get_success_headers(serializer_response.data)
@@ -218,9 +196,6 @@ class modelViewSet(viewsets.ModelViewSet, Base):
     serializer = self.get_serializer(
         instance,
         view=request.GET.get('view', None),
-        row=request.GET.get('row', None),
-        element=request.GET.get('element', None),
-        item=request.GET.get('item', None),
         context={'request': request},
     )
     return Response(serializer.data)
@@ -230,21 +205,18 @@ class modelViewSet(viewsets.ModelViewSet, Base):
     qs, meta = self.get_queryset()
     queryset = self.filter_queryset(qs)
     view = request.GET.get('view', None)
-    row = request.GET.get('row', None)
-    element = request.GET.get('element', None)
-    item = request.GET.get('item', None)
     page_number = request.query_params.get(self.pagination_class.page_query_param, None)
     # logger.warning(f"{self.__class__.__name__}: {view}")
     task_id = f'query {self.serializer_class.Meta.model.__name__} list view'
     timer.start(task_id)
     if page_number is not None:
       page = self.paginate_queryset(queryset)
-      serializer = self.get_serializer(page, many=True, view=view, row=row, element=element, item=item)
+      serializer = self.get_serializer(page, many=True, view=view)
       response = self.get_paginated_response(serializer.data, meta)
       timer.finish(task_id)
       return response
 
-    serializer = self.get_serializer(queryset, many=True, view=view, row=row, element=element, item=item, context={'request': request})
+    serializer = self.get_serializer(queryset, many=True, view=view, context={'request': request})
     timer.finish(task_id)
     return Response(serializer.data)
 
